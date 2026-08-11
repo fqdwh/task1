@@ -1,32 +1,21 @@
 package main
 
-import (
+import(
 	"fmt"
+	"os"
 )
 
-func generate(ch chan int) {
-	for i := 2; ; i++ {
-		ch <- i
-	}
-}
-
-func filter(in chan int, out chan int, prime int) {
-	for {
-		num := <-in
-		if num%prime != 0 {
-			out <- num
-		}
-	}
-}
-
 func main() {
-	ch := make(chan int)
-	go generate(ch)
-	for i := 0; i < 6; i++ {
-		prime := <-ch 
-		fmt.Printf("prime:%d\n", prime)
-		out := make(chan int)
-		go filter(ch, out, prime)
-		ch = out
+	file,err := os.Create("ninenine.txt") // 不存在创建，存在清空
+	if err != nil {
+		fmt.Println("Error creating file:", err)
+	}
+	defer file.Close()
+
+	for i:=1;i<=9;i++ {
+		for j:=1;j<=i;j++ {
+			fmt.Fprintf(file," %d * %d = %2d ",j,i,i*j)
+		}
+		fmt.Fprintf(file,"\n")
 	}
 }
