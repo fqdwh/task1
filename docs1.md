@@ -46,3 +46,53 @@ m := map[string]int{}   // 空 map 而不是 nil， 可以安全写入
 var m map[string]int    // m==nil
 ```
 ---
+Bouns3
+```go
+package main
+
+import (
+	"fmt"
+)
+
+// 生成器
+// 不断产生整数列
+func generate(ch chan int) {
+	for i := 2; ; i++ {     // 死循环
+		ch <- i             // 生成数字发送到通道
+	}
+}
+
+// 过滤器
+// 过滤能被质数整除的数
+func filter(in chan int, out chan int, prime int) {
+	for {
+		num := <-in         // 输入从通道接收数字
+		if num%prime != 0 {
+			out <- num      // 不能被当前质数整除就发送到输出通道
+		}
+	}
+}
+
+func main() {
+	ch := make(chan int)
+	go generate(ch)
+	for i := 0; i < 6; i++ {
+		prime := <-ch 
+		fmt.Printf("prime:%d\n", prime)
+		out := make(chan int)
+		go filter(ch, out, prime)
+		ch = out
+	}
+	// 第一轮 prime = 2 
+	// ch 里筛出 2 的倍数，其余进入 out 
+	// ch 指向 out
+	// 在筛出 2 的倍数的基础下再筛出 3 的倍数
+	// 循环
+}
+```
+1. 实现了一个基于并发流水线的质数筛选器
+2. 采取 Goroutines 并发运行，通过 channels 串联进程
+3. 没有性能上的提升：每次传递的通信成本远大于计算成本；随着质数越来越多，会创建越来越多的 goroutine 和 channel，造成资源浪费
+---
+m 个线程打印 n 个数
+* 创建 m 个 channel,循环激活轮流打印
